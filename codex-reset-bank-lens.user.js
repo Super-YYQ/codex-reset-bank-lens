@@ -423,28 +423,20 @@
         : '';
 
       contentEl.innerHTML = `
-        <section class="crc-stats" aria-label="Reset credits summary">
-          ${renderStatCard(text.availableCredits, summary.availableCount)}
-          ${renderStatCard(text.nearestExpiry, summary.nearestRemaining)}
-          ${renderStatCard(text.nearestExpiryTime, summary.nearestExpiryTime)}
-        </section>
+        <div class="crc-meta-row" aria-label="Reset credits summary">
+          <span class="crc-meta-count">
+            ${escapeHtml(text.availableCredits)}
+            <strong>${escapeHtml(summary.availableCount)}</strong>
+          </span>
+          <span class="crc-meta-note">${escapeHtml(text.safeNote)}</span>
+        </div>
         ${nextResetHtml}
-        <div class="crc-safety">
+        <div class="crc-safety" aria-label="${escapeHtml(text.readOnly)}">
           <span>${escapeHtml(text.readOnly)}</span>
-          <p>${escapeHtml(text.safeNote)}</p>
         </div>
         ${renderTable(currentState.credits)}
       `;
     }
-  }
-
-  function renderStatCard(label, value) {
-    return `
-      <article class="crc-card">
-        <span>${escapeHtml(label)}</span>
-        <strong>${escapeHtml(value)}</strong>
-      </article>
-    `;
   }
 
   function renderTable(credits) {
@@ -488,7 +480,10 @@
     buttonEl = document.createElement('button');
     buttonEl.type = 'button';
     buttonEl.className = 'crc-floating-button';
-    buttonEl.textContent = text.buttonLabel;
+    buttonEl.innerHTML = `
+      <span class="crc-button-mark">${lensIconSvg()}</span>
+      <span class="crc-button-text">${escapeHtml(text.buttonLabel)}</span>
+    `;
     buttonEl.setAttribute('aria-label', text.title);
     buttonEl.setAttribute('title', text.dragHint);
 
@@ -528,6 +523,7 @@
     document.body.appendChild(buttonEl);
     initializeFloatingPosition();
     window.addEventListener('resize', handleWindowResize);
+    document.addEventListener('pointerdown', handleDocumentPointerDown, true);
   }
 
   function togglePanel(event) {
@@ -562,6 +558,14 @@
       isOpen = false;
       panelEl.classList.remove('crc-panel-open');
     }
+  }
+
+  function handleDocumentPointerDown(event) {
+    if (!isOpen || !panelEl || !buttonEl) return;
+    if (panelEl.contains(event.target) || buttonEl.contains(event.target)) return;
+
+    isOpen = false;
+    panelEl.classList.remove('crc-panel-open');
   }
 
   function initializeFloatingPosition() {
@@ -681,6 +685,10 @@
     return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m18 6-12 12M6 6l12 12"/></svg>';
   }
 
+  function lensIconSvg() {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M10.8 5.2a5.6 5.6 0 1 0 0 11.2 5.6 5.6 0 0 0 0-11.2Zm4 9.6 4 4"/></svg>';
+  }
+
   function addStyles() {
     GM_addStyle(`
       .crc-floating-button {
@@ -688,28 +696,60 @@
         right: 22px;
         bottom: 22px;
         z-index: 2147483646;
-        width: 62px;
-        height: 62px;
-        border: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        width: auto;
+        min-width: 74px;
+        height: 38px;
+        padding: 0 11px 0 10px;
+        border: 1px solid rgba(37, 99, 235, 0.18);
         border-radius: 999px;
-        color: #ffffff;
-        background: radial-gradient(circle at 30% 22%, #fef3c7 0, #22c55e 22%, #2563eb 64%, #111827 100%);
-        box-shadow: 0 18px 38px rgba(15, 23, 42, 0.32), 0 0 0 1px rgba(255, 255, 255, 0.45) inset;
-        font: 700 13px/1.1 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: #1e3a8a;
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(255, 255, 255, 0.7) inset;
+        font: 750 12px/1 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        backdrop-filter: blur(14px);
         cursor: grab;
         touch-action: none;
         user-select: none;
-        transition: filter 160ms ease, transform 160ms ease;
+        transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
       }
 
       .crc-floating-button:hover {
-        filter: brightness(1.12);
+        border-color: rgba(37, 99, 235, 0.34);
+        box-shadow: 0 16px 38px rgba(37, 99, 235, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
         transform: translateY(-1px);
       }
 
       .crc-floating-button-dragging {
         cursor: grabbing;
         transform: scale(1.03);
+      }
+
+      .crc-button-mark {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        color: #2563eb;
+        background: #eff6ff;
+        border: 1px solid rgba(37, 99, 235, 0.14);
+        border-radius: 999px;
+        flex: 0 0 auto;
+      }
+
+      .crc-button-mark svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      .crc-button-text {
+        display: inline-block;
+        color: #172554;
+        letter-spacing: 0;
       }
 
       .crc-panel {
@@ -824,35 +864,55 @@
         border-color: rgba(244, 63, 94, 0.24);
       }
 
-      .crc-stats {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+      .crc-meta-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         gap: 10px;
-      }
-
-      .crc-card {
-        min-height: 82px;
-        padding: 12px;
-        background: #ffffff;
-        border: 1px solid rgba(15, 23, 42, 0.08);
-        border-radius: 12px;
-        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
-      }
-
-      .crc-card span {
-        display: block;
+        min-height: 32px;
+        margin-bottom: 10px;
         color: #64748b;
-        font-size: 11px;
+        font-size: 12px;
         line-height: 1.35;
       }
 
-      .crc-card strong {
-        display: block;
-        margin-top: 8px;
+      .crc-meta-count,
+      .crc-meta-note {
+        display: inline-flex;
+        align-items: center;
+        min-width: 0;
+      }
+
+      .crc-meta-count {
+        gap: 8px;
+        flex: 0 0 auto;
+        color: #475569;
+      }
+
+      .crc-meta-count strong {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 30px;
+        height: 26px;
+        padding: 0 9px;
         color: #0f172a;
-        font-size: 18px;
-        line-height: 1.25;
-        word-break: break-word;
+        background: #ffffff;
+        border: 1px solid rgba(37, 99, 235, 0.14);
+        border-radius: 999px;
+        font-size: 15px;
+        line-height: 1;
+        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+      }
+
+      .crc-meta-note {
+        justify-content: flex-end;
+        flex: 1 1 auto;
+        overflow: hidden;
+        color: #64748b;
+        text-align: right;
+        white-space: nowrap;
+        text-overflow: ellipsis;
       }
 
       .crc-next-reset {
@@ -874,11 +934,12 @@
       }
 
       .crc-safety {
-        margin-top: 12px;
-        padding: 12px;
-        background: linear-gradient(135deg, #ecfdf5, #f8fafc);
-        border: 1px solid rgba(20, 184, 166, 0.22);
-        border-radius: 12px;
+        margin-top: 0;
+        margin-bottom: 10px;
+        padding: 0;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
       }
 
       .crc-safety span {
@@ -947,8 +1008,9 @@
         .crc-floating-button {
           right: 16px;
           bottom: 16px;
-          width: 56px;
-          height: 56px;
+          min-width: 68px;
+          height: 36px;
+          padding-inline: 9px 10px;
         }
 
         .crc-panel {
@@ -960,8 +1022,16 @@
           padding: 15px;
         }
 
-        .crc-stats {
-          grid-template-columns: 1fr;
+        .crc-meta-row {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .crc-meta-note {
+          justify-content: flex-start;
+          text-align: left;
+          white-space: normal;
         }
       }
     `);
