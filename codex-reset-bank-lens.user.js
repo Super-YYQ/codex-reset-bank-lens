@@ -2,7 +2,7 @@
 // @name         Codex Reset Bank Lens
 // @name:zh-CN   Codex 重置额度透镜
 // @namespace    https://github.com/Super-YYQ/codex-reset-bank-lens
-// @version      0.1.0
+// @version      0.1.1
 // @description  View ChatGPT Codex reset credits, banked credits, expiration time, remaining time, and used status. Read-only, no consume.
 // @description:zh-CN 查看 ChatGPT Codex 重置额度、充值额度、过期时间、剩余时间和使用状态。只读查询，不执行重置。
 // @author       Super-YYQ
@@ -122,6 +122,9 @@
   let currentState = { kind: 'idle' };
   let dragState = null;
   let suppressNextClick = false;
+  let isGlobalListenersBound = false;
+  let uiMutationObserver = null;
+  let ensureUiTimer = null;
 
   function escapeHtml(value) {
     return String(value == null ? '' : value)
@@ -477,6 +480,17 @@
   }
 
   function createUi() {
+    if (!document.body) return;
+
+    const mountRoot = document.documentElement || document.body;
+    const previousButtonRect = buttonEl && document.documentElement.contains(buttonEl)
+      ? buttonEl.getBoundingClientRect()
+      : null;
+
+    document.querySelectorAll('.crc-floating-button, .crc-panel').forEach((node) => {
+      node.remove();
+    });
+
     buttonEl = document.createElement('button');
     buttonEl.type = 'button';
     buttonEl.className = 'crc-floating-button';
@@ -519,11 +533,65 @@
     buttonEl.addEventListener('pointercancel', handleButtonPointerUp);
     panelEl.addEventListener('click', handlePanelClick);
 
-    document.body.appendChild(panelEl);
-    document.body.appendChild(buttonEl);
-    initializeFloatingPosition();
+    if (isOpen) {
+      panelEl.classList.add('crc-panel-open');
+    }
+
+    mountRoot.appendChild(panelEl);
+    mountRoot.appendChild(buttonEl);
+
+    if (previousButtonRect) {
+      setFloatingButtonPosition(previousButtonRect.left, previousButtonRect.top);
+    } else {
+      initializeFloatingPosition();
+    }
+
+    renderContent();
+    bindGlobalListeners();
+    positionPanelNearButton();
+  }
+
+  function bindGlobalListeners() {
+    if (isGlobalListenersBound) return;
+
     window.addEventListener('resize', handleWindowResize);
     document.addEventListener('pointerdown', handleDocumentPointerDown, true);
+    isGlobalListenersBound = true;
+  }
+
+  function ensureUiMounted() {
+    if (!document.body || !document.documentElement) return;
+
+    const existingButtons = document.querySelectorAll('.crc-floating-button');
+    const existingPanels = document.querySelectorAll('.crc-panel');
+    const existingButton = existingButtons[0];
+    const existingPanel = existingPanels[0];
+    const hasButton = Boolean(existingButton && document.documentElement.contains(existingButton));
+    const hasPanel = Boolean(existingPanel && document.documentElement.contains(existingPanel));
+
+    if (existingButtons.length > 1 || existingPanels.length > 1) {
+      createUi();
+      return;
+    }
+
+    if (!buttonEl && hasButton) {
+      buttonEl = existingButton;
+    }
+    if (!panelEl && hasPanel) {
+      panelEl = existingPanel;
+      contentEl = panelEl.querySelector('.crc-content');
+    }
+
+    if (!buttonEl || !document.documentElement.contains(buttonEl) || !panelEl || !document.documentElement.contains(panelEl)) {
+      createUi();
+      return;
+    }
+
+    if (!contentEl || !panelEl.contains(contentEl)) {
+      contentEl = panelEl.querySelector('.crc-content');
+    }
+
+    bindGlobalListeners();
   }
 
   function togglePanel(event) {
@@ -566,6 +634,39 @@
 
     isOpen = false;
     panelEl.classList.remove('crc-panel-open');
+  }
+
+  function scheduleEnsureUiMounted() {
+    if (ensureUiTimer) return;
+
+    ensureUiTimer = window.setTimeout(() => {
+      ensureUiTimer = null;
+      ensureUiMounted();
+    }, 100);
+  }
+
+  function nodeContainsManagedUi(node) {
+    if (!node || node.nodeType !== Node.ELEMENT_NODE) return false;
+    return node.matches('.crc-floating-button, .crc-panel') || Boolean(node.querySelector('.crc-floating-button, .crc-panel'));
+  }
+
+  function startUiRemovalObserver() {
+    if (uiMutationObserver || !document.documentElement) return;
+
+    uiMutationObserver = new MutationObserver((mutations) => {
+      const removedManagedUi = mutations.some((mutation) => {
+        return Array.from(mutation.removedNodes).some(nodeContainsManagedUi);
+      });
+
+      if (removedManagedUi) {
+        scheduleEnsureUiMounted();
+      }
+    });
+
+    uiMutationObserver.observe(document.documentElement, {
+      childList: true,
+      subtree: true
+    });
   }
 
   function initializeFloatingPosition() {
@@ -695,7 +796,7 @@
         position: fixed;
         right: 22px;
         bottom: 22px;
-        z-index: 2147483646;
+        z-index: 2147483647;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -756,7 +857,7 @@
         position: fixed;
         right: 22px;
         bottom: 96px;
-        z-index: 2147483645;
+        z-index: 2147483646;
         width: 520px;
         max-width: calc(100vw - 32px);
         max-height: calc(100vh - 128px);
@@ -1038,12 +1139,15 @@
   }
 
   addStyles();
-  createUi();
+  ensureUiMounted();
+  startUiRemovalObserver();
 
   window.setInterval(() => {
+    ensureUiMounted();
+
     if (isOpen && currentState.kind === 'success') {
       renderContent();
     }
-  }, 30000);
+  }, 2000);
 })();
 
