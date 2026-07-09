@@ -7,8 +7,6 @@
 
 一个运行在 `https://chatgpt.com/*` 上的 Tampermonkey 用户脚本，用一个可移动的“透镜”面板只读查看当前登录账号的 ChatGPT Codex reset credits 信息，包括重置额度、充值额度关键词、发放时间、过期时间、剩余时间和使用状态。
 
-> 发布前请把脚本 metadata 和本文档里的 `PLACEHOLDER_SCRIPT_ID` 替换成 Greasy Fork 脚本 ID。
-
 ## 功能列表
 
 - 查看可用 reset credits / 重置额度数量，便于通过“Codex 充值额度”“重置额度”等关键词检索。
@@ -32,7 +30,7 @@
 
 打开 Greasy Fork 页面并安装：
 
-https://greasyfork.org/zh-CN/scripts/PLACEHOLDER_SCRIPT_ID
+https://greasyfork.org/zh-CN/scripts/586281-codex-reset-bank-lens
 
 ### GitHub raw 安装
 
@@ -83,12 +81,6 @@ It depends on internal ChatGPT endpoints. It may stop working if OpenAI changes 
 
 ```text
 codex-reset-bank-lens.user.js
-```
-
-建议发布前检查：
-
-```text
-PLACEHOLDER_SCRIPT_ID
 ```
 
 并确认它们已经替换成你自己的发布信息。
