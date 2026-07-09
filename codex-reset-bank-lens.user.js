@@ -3,8 +3,8 @@
 // @name:zh-CN   Codex 重置额度透镜
 // @namespace    https://github.com/Super-YYQ/codex-reset-bank-lens
 // @version      0.1.0
-// @description  Inspect Codex banked reset credits as a movable read-only lens on chatgpt.com. No consume.
-// @description:zh-CN 在 chatgpt.com 以可移动透镜查看 Codex reset credits。只读查询，不执行重置。
+// @description  View ChatGPT Codex reset credits, banked credits, expiration time, remaining time, and used status. Read-only, no consume.
+// @description:zh-CN 查看 ChatGPT Codex 重置额度、充值额度、过期时间、剩余时间和使用状态。只读查询，不执行重置。
 // @author       Super-YYQ
 // @match        https://chatgpt.com/*
 // @icon         https://chatgpt.com/favicon.ico

@@ -5,13 +5,13 @@
 
 # Codex Reset Bank Lens
 
-一个运行在 `https://chatgpt.com/*` 上的 Tampermonkey 用户脚本，用一个可移动的“透镜”面板只读查看当前登录账号的 Codex banked reset credits 信息。
+一个运行在 `https://chatgpt.com/*` 上的 Tampermonkey 用户脚本，用一个可移动的“透镜”面板只读查看当前登录账号的 ChatGPT Codex reset credits 信息，包括重置额度、充值额度关键词、发放时间、过期时间、剩余时间和使用状态。
 
 > 发布前请把脚本 metadata 和本文档里的 `PLACEHOLDER_SCRIPT_ID` 替换成 Greasy Fork 脚本 ID。
 
 ## 功能列表
 
-- 查看可用 reset credits 数量。
+- 查看可用 reset credits / 重置额度数量，便于通过“Codex 充值额度”“重置额度”等关键词检索。
 - 查看每个 reset credit 的发放时间、过期时间、剩余时间。
 - 查看 reset credit 是否已使用，以及使用时间。
 - 标记最近一次即将过期的 reset credit。
@@ -24,7 +24,7 @@
 
 ## Screenshots
 
-TODO: add screenshots
+![Codex Reset Bank Lens screenshot](assets/screenshot.png)
 
 ## 安装方式
 
